@@ -854,7 +854,7 @@
         <!-- Info tooltip -->
         <div id="bgr-tooltip" class="bgr-tooltip" role="tooltip" hidden>
           <strong>AI Background Removal</strong>
-          <p>Uses the <em>RMBG-1.4</em> model (pinned to v1.7.0, ~40&nbsp;MB, downloaded once and cached by your browser). Processing is entirely on-device — nothing is uploaded anywhere.</p>
+          <p>Uses the <em>RMBG-1.4</em> model via <code style="font-size:0.78rem;color:#7a9ec8">@imgly/background-removal@1.7.0</code> (~40&nbsp;MB, downloaded once and cached by your browser). Processing is entirely on-device — nothing is uploaded anywhere.</p>
           <p>Trigger it per-image with the <strong>✦ Remove BG</strong> button on each card. Best for subjects with a clear foreground (people, objects, logos).</p>
           <button class="bgr-tooltip-close" id="bgr-tooltip-close" aria-label="Close">✕</button>
         </div>
@@ -1041,10 +1041,9 @@
     // 2. AI BACKGROUND REMOVAL — pinned version, bytes progress
     // ═══════════════════════════════════════════════════════════════
 
-    // Explicit version pins — bump both together when upgrading.
-    const BGR_VERSION  = '1.7.0';
-    const BGR_ESM_URL  = `https://cdn.jsdelivr.net/npm/@imgly/background-removal@${BGR_VERSION}/dist/index.mjs`;
-    const BGR_CDN_BASE = `https://cdn.jsdelivr.net/npm/@imgly/background-removal@${BGR_VERSION}/dist/`;
+    // Explicit version pin — bump when upgrading.
+    const BGR_VERSION = '1.7.0';
+    const BGR_ESM_URL = `https://cdn.jsdelivr.net/npm/@imgly/background-removal@${BGR_VERSION}/dist/index.mjs`;
 
     let bgRemoveFn = null; // set after successful load; (blob) → Promise<Blob>
     let bgrState   = 'idle'; // 'idle' | 'loading' | 'ready' | 'error'
@@ -1094,10 +1093,12 @@
       }
 
       const baseCfg = {
-        device:     'cpu',
-        output:     { format: 'image/png' },
-        publicPath: BGR_CDN_BASE, // explicit CDN base — pins model asset version
-        progress:   onProgress,
+        device:   'cpu',
+        output:   { format: 'image/png' },
+        progress: onProgress,
+        // publicPath intentionally omitted — the library auto-detects it from
+        // import.meta.url (the jsDelivr ESM URL), which points to the correct
+        // model asset location for this package version.
       };
 
       try {
@@ -1120,9 +1121,8 @@
         // Store the inference function without the progress callback
         // (model is now cached — no progress events will fire on re-use).
         bgRemoveFn = (blob) => fn(blob, {
-          device:     'cpu',
-          output:     { format: 'image/png' },
-          publicPath: BGR_CDN_BASE,
+          device: 'cpu',
+          output: { format: 'image/png' },
         });
 
         setBgrState('ready');
